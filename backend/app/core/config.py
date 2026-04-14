@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "AlgoAssist API"
     api_v1_prefix: str = "/api/v1"
-    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/algoassist"
+    database_url: str = "mongodb://localhost:27017"
+    database_name: str = "algoassist"
     secret_key: str = "change-this-secret-key"
     access_token_expire_minutes: int = 60
     algorithm: str = "HS256"

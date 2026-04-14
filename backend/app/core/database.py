@@ -1,12 +1,17 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from pymongo import MongoClient
+from pymongo.collection import Collection
+from pymongo.database import Database
 
 from app.core.config import settings
 
+client = MongoClient(settings.database_url)
+database = client[settings.database_name]
 
-class Base(DeclarativeBase):
-    pass
+
+def get_database() -> Database:
+    return database
 
 
-engine = create_engine(settings.database_url, future=True)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+def get_user_collection(db: Database | None = None) -> Collection:
+    active_db = db or database
+    return active_db["users"]

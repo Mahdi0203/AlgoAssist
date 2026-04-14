@@ -1,7 +1,7 @@
 import type { User } from "@/lib/types/user";
 
 export const currentUser: User = {
-  id: 1,
+  id: "demo-user-1",
   name: "Hasan Ahmed",
   email: "hasan@example.com",
   phone_number: "+880 1700-000000",

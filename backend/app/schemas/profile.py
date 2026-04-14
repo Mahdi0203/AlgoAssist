@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserProfileResponse(BaseModel):
-    id: int
+    id: str
     name: str
     email: EmailStr
     phone_number: str | None
@@ -11,10 +11,6 @@ class UserProfileResponse(BaseModel):
     discord_username: str | None
     vjudge_username: str | None
     codeforces_username: str | None
-
-    class Config:
-        from_attributes = True
-
 
 class UpdateProfileRequest(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=120)

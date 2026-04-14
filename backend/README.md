@@ -17,13 +17,14 @@ From `backend/`:
 copy .env.example .env
 ```
 
-Default local DB connection:
+Default local MongoDB connection:
 
 ```env
-DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/algoassist
+DATABASE_URL=mongodb://localhost:27017
+DATABASE_NAME=algoassist
 ```
 
-For Render deployment, replace this with your managed PostgreSQL connection string.
+For Render deployment, replace this with your managed MongoDB connection string.
 
 ### 2. Create Python environment and install dependencies
 
@@ -65,7 +66,7 @@ Frontend will be available at `http://127.0.0.1:3000`.
 
 ## End-to-End Flow
 
-1. Make sure PostgreSQL is running locally or use a hosted PostgreSQL database.
+1. Make sure MongoDB is running locally or use a hosted MongoDB database.
 2. Start the FastAPI backend from `backend/`.
 3. Start the Next.js frontend from `frontend/`.
 4. Open the app, create an account from the auth modal, then visit `/profile`.
@@ -75,11 +76,10 @@ Frontend will be available at `http://127.0.0.1:3000`.
 
 - Deploy `backend/` as a Python web service on Render.
 - Use the start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-- Add your hosted PostgreSQL `DATABASE_URL` in Render environment variables.
+- Add your hosted MongoDB `DATABASE_URL` and `DATABASE_NAME` in Render environment variables.
 - Set `BACKEND_CORS_ORIGINS` to include your frontend URL.
 
 ## Notes
 
-- This scaffold creates tables on startup for early development.
-- Tables are created automatically when the FastAPI app starts.
+- This scaffold creates a unique email index on startup for early development.
 - Add Alembic later when you are ready for migrations.
