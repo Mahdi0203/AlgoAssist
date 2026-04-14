@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/components/providers/auth-provider";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type AuthModalProps = {
@@ -13,6 +15,16 @@ type AuthTab = "sign-in" | "sign-up";
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<AuthTab>("sign-in");
+  const [signInForm, setSignInForm] = useState({ email: "", password: "" });
+  const [signUpForm, setSignUpForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, signUp } = useAuth();
 
   useEffect(() => {
     if (!isOpen) {
@@ -37,6 +49,50 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) {
     return null;
   }
+
+  const handleSignInSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await signIn(signInForm);
+      onClose();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError ? error.message : "Unable to sign in right now.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignUpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    if (signUpForm.password !== signUpForm.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await signUp({
+        name: signUpForm.name,
+        email: signUpForm.email,
+        password: signUpForm.password,
+      });
+      onClose();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError ? error.message : "Unable to create account right now.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -106,7 +162,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </div>
 
         {activeTab === "sign-in" ? (
-          <form className="mt-6 space-y-5">
+          <form className="mt-6 space-y-5" onSubmit={handleSignInSubmit}>
             <div className="space-y-2">
               <label htmlFor="signin-email" className="text-sm font-semibold text-slate-900">
                 Email
@@ -114,6 +170,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signin-email"
                 type="email"
+                value={signInForm.email}
+                onChange={(event) =>
+                  setSignInForm((current) => ({ ...current, email: event.target.value }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
@@ -136,19 +196,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signin-password"
                 type="password"
+                value={signInForm.password}
+                onChange={(event) =>
+                  setSignInForm((current) => ({ ...current, password: event.target.value }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
 
+            {errorMessage ? <p className="text-sm text-rose-600">{errorMessage}</p> : null}
+
             <button
               type="submit"
+              disabled={isSubmitting}
               className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
             >
-              Sign In
+              {isSubmitting ? "Signing In..." : "Sign In"}
             </button>
           </form>
         ) : (
-          <form className="mt-6 space-y-5">
+          <form className="mt-6 space-y-5" onSubmit={handleSignUpSubmit}>
             <div className="space-y-2">
               <label htmlFor="signup-name" className="text-sm font-semibold text-slate-900">
                 Full Name
@@ -156,6 +223,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signup-name"
                 type="text"
+                value={signUpForm.name}
+                onChange={(event) =>
+                  setSignUpForm((current) => ({ ...current, name: event.target.value }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
@@ -167,6 +238,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signup-email"
                 type="email"
+                value={signUpForm.email}
+                onChange={(event) =>
+                  setSignUpForm((current) => ({ ...current, email: event.target.value }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
@@ -178,6 +253,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signup-password"
                 type="password"
+                value={signUpForm.password}
+                onChange={(event) =>
+                  setSignUpForm((current) => ({ ...current, password: event.target.value }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
@@ -192,15 +271,25 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 id="signup-confirm-password"
                 type="password"
+                value={signUpForm.confirmPassword}
+                onChange={(event) =>
+                  setSignUpForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-300"
               />
             </div>
 
+            {errorMessage ? <p className="text-sm text-rose-600">{errorMessage}</p> : null}
+
             <button
               type="submit"
+              disabled={isSubmitting}
               className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
             >
-              Create account
+              {isSubmitting ? "Creating account..." : "Create account"}
             </button>
           </form>
         )}

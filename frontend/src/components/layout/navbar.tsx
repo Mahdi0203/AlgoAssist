@@ -6,13 +6,14 @@ import { useState } from "react";
 
 import { AuthModal } from "@/components/layout/auth-modal";
 import { PageContainer } from "@/components/layout/page-container";
+import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 const navigationLinks = [
   { href: "/", label: "Home" },
   { href: "/roadmap", label: "Roadmap" },
   { href: "/profile", label: "Profile" },
-  { href: "/admin", label: "Admin" },
+  //{ href: "/admin", label: "Admin" },
 ];
 
 function AuthAction({ onClick }: { onClick?: () => void }) {
@@ -45,6 +46,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, isLoading, signOut } = useAuth();
 
   const isActiveLink = (href: string) => {
     if (href === "/") {
@@ -93,7 +95,25 @@ export function Navbar() {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <AuthAction onClick={() => setIsAuthModalOpen(true)} />
+            {user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                >
+                  {user.name}
+                </Link>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : !isLoading ? (
+              <AuthAction onClick={() => setIsAuthModalOpen(true)} />
+            ) : null}
           </div>
 
           <button
@@ -148,12 +168,25 @@ export function Navbar() {
                 ))}
               </nav>
 
-              <AuthAction
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsAuthModalOpen(true);
-                }}
-              />
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    signOut();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <AuthAction
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                />
+              )}
             </PageContainer>
           </div>
         ) : null}

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { AppShell } from "@/components/layout/app-shell";
 
 const manrope = Manrope({
@@ -36,7 +37,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${manrope.variable} min-h-screen bg-slate-50 font-sans text-slate-950 antialiased`}>
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );
