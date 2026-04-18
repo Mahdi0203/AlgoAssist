@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
-from app.core.database import client, get_user_collection
+from app.core.database import init_database
 
 app = FastAPI(title=settings.app_name)
 app.add_middleware(
@@ -17,13 +17,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup() -> None:
-    client.admin.command("ping")
-    get_user_collection().create_index("email", unique=True)
-
-
-@app.on_event("shutdown")
-def on_shutdown() -> None:
-    client.close()
+    init_database()
 
 
 @app.get("/health", tags=["health"])

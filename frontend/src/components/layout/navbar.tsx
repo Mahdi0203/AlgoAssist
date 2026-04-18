@@ -7,12 +7,12 @@ import { useState } from "react";
 import { AuthModal } from "@/components/layout/auth-modal";
 import { PageContainer } from "@/components/layout/page-container";
 import { useAuth } from "@/components/providers/auth-provider";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
 
 const navigationLinks = [
   { href: "/", label: "Home" },
   { href: "/roadmap", label: "Roadmap" },
-  { href: "/profile", label: "Profile" },
   //{ href: "/admin", label: "Admin" },
 ];
 
@@ -99,8 +99,14 @@ export function Navbar() {
               <>
                 <Link
                   href="/profile"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                  className="inline-flex items-center gap-3 rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
                 >
+                  <UserAvatar
+                    name={user.name}
+                    avatarUrl={user.avatar_url}
+                    className="h-9 w-9 border border-slate-200"
+                    fallbackClassName="text-sm"
+                  />
                   {user.name}
                 </Link>
                 <button
@@ -169,16 +175,30 @@ export function Navbar() {
               </nav>
 
               {user ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    signOut();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-                >
-                  Sign Out
-                </button>
+                <>
+                  <Link
+                    href="/profile"
+                    className="inline-flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserAvatar
+                      name={user.name}
+                      avatarUrl={user.avatar_url}
+                      className="h-10 w-10 border border-slate-200"
+                    />
+                    {user.name}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      signOut();
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                  >
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <AuthAction
                   onClick={() => {

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { useAuth } from "@/components/providers/auth-provider";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { ApiError } from "@/lib/api";
 import { userProfile } from "@/lib/mock-data/profile";
 import { cn } from "@/lib/utils";
@@ -88,6 +88,7 @@ export default function ProfilePage() {
   const [draftValue, setDraftValue] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const profileFields = useMemo(() => {
     if (!user) {
@@ -172,6 +173,54 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Please upload an image file.");
+      return;
+    }
+
+    if (file.size > 1_500_000) {
+      setErrorMessage("Please upload an image smaller than 1.5 MB.");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setErrorMessage(null);
+
+    try {
+      const avatarUrl = await readFileAsDataUrl(file);
+      await updateProfile({ avatar_url: avatarUrl });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError ? error.message : "Unable to upload your profile picture.",
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    setIsUploadingAvatar(true);
+    setErrorMessage(null);
+
+    try {
+      await updateProfile({ avatar_url: null });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError ? error.message : "Unable to remove your profile picture.",
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <PageContainer className="py-16">
@@ -203,6 +252,8 @@ export default function ProfilePage() {
     );
   }
 
+  const currentUser = user!;
+
   return (
     <div className="relative overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_32%),linear-gradient(180deg,_#ffffff_0%,_#f8fbff_45%,_#f5f7fb_100%)]">
       <div className="absolute inset-x-0 top-0 -z-0 h-72 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_58%)]" />
@@ -214,14 +265,38 @@ export default function ProfilePage() {
               <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(135deg,_rgba(14,165,233,0.14),_rgba(96,165,250,0.04)_45%,_rgba(255,255,255,0.8)_100%)]" />
 
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative h-28 w-28 overflow-hidden rounded-full border-[6px] border-white bg-slate-100 shadow-lg shadow-sky-100/80">
-                  <Image
-                    src={userProfile.avatarUrl}
-                    alt={userProfile.name}
-                    fill
-                    sizes="112px"
-                    className="object-cover"
+                <div className="relative h-28 w-28">
+                  <UserAvatar
+                    name={currentUser.name}
+                    avatarUrl={currentUser.avatar_url}
+                    className="h-full w-full overflow-hidden rounded-full border-[6px] border-white bg-slate-100 shadow-lg shadow-sky-100/80"
+                    fallbackClassName="text-4xl"
                   />
+                  <label className="absolute bottom-0 right-0 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-4 border-white bg-slate-950 text-white shadow-lg transition-colors hover:bg-slate-800">
+                    <span className="sr-only">
+                      {isUploadingAvatar ? "Uploading profile picture" : "Choose profile picture"}
+                    </span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
+                    </svg>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
+                    />
+                  </label>
                 </div>
 
                 <div className="mt-5 space-y-2">
@@ -230,7 +305,7 @@ export default function ProfilePage() {
                   </span>
                   <div>
                     <h1 className="bg-gradient-to-r from-slate-950 via-sky-700 to-cyan-600 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-5xl">
-                      {user.name}
+                      {currentUser.name}
                     </h1>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
                       {userProfile.bio}
@@ -252,6 +327,25 @@ export default function ProfilePage() {
                     </article>
                   ))}
                 </div>
+
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  {currentUser.avatar_url ? (
+                    <button
+                      type="button"
+                      onClick={() => void removeAvatar()}
+                      disabled={isUploadingAvatar}
+                      className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                    >
+                      Remove picture
+                    </button>
+                  ) : null}
+                </div>
+
+                {!currentUser.avatar_url ? (
+                  <p className="mt-2 text-center text-sm text-slate-500">
+                    Upload profile picture..
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -347,4 +441,13 @@ export default function ProfilePage() {
       </PageContainer>
     </div>
   );
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("File read failed"));
+    reader.readAsDataURL(file);
+  });
 }

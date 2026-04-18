@@ -17,14 +17,14 @@ From `backend/`:
 copy .env.example .env
 ```
 
-Default local MongoDB connection:
+Default local database path:
 
 ```env
-DATABASE_URL=mongodb://localhost:27017
-DATABASE_NAME=algoassist
+DATABASE_PATH=algoassist.db
 ```
 
-For Render deployment, replace this with your managed MongoDB connection string.
+The app creates the SQLite database file automatically on startup.
+On Windows, the default file is stored in `%LOCALAPPDATA%\AlgoAssist\algoassist.db`.
 
 ### 2. Create Python environment and install dependencies
 
@@ -66,20 +66,13 @@ Frontend will be available at `http://127.0.0.1:3000`.
 
 ## End-to-End Flow
 
-1. Make sure MongoDB is running locally or use a hosted MongoDB database.
-2. Start the FastAPI backend from `backend/`.
-3. Start the Next.js frontend from `frontend/`.
-4. Open the app, create an account from the auth modal, then visit `/profile`.
-5. Edit profile fields and save them with the check button.
-
-## Render Notes
-
-- Deploy `backend/` as a Python web service on Render.
-- Use the start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-- Add your hosted MongoDB `DATABASE_URL` and `DATABASE_NAME` in Render environment variables.
-- Set `BACKEND_CORS_ORIGINS` to include your frontend URL.
+1. Start the FastAPI backend from `backend/`.
+2. Start the Next.js frontend from `frontend/`.
+3. Open the app, create an account from the auth modal, then visit `/profile`.
+4. Edit profile fields and save them with the check button.
 
 ## Notes
 
-- This scaffold creates a unique email index on startup for early development.
-- Add Alembic later when you are ready for migrations.
+- The backend uses a local SQLite file so it works on a fresh localhost setup without MongoDB.
+- On Windows, the default database path resolves to `%LOCALAPPDATA%\AlgoAssist\algoassist.db`.
+- Add migrations later if you plan to evolve the schema beyond local development.

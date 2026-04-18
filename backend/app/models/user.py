@@ -1,1 +1,1 @@
-"""MongoDB-backed user persistence no longer uses ORM models in this project."""
+"""The backend uses repository helpers over a small SQLite database for local development."""

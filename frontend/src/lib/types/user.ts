@@ -4,6 +4,7 @@ export interface User {
   email: string;
   phone_number?: string | null;
   institute?: string | null;
+  avatar_url?: string | null;
   facebook_link?: string | null;
   discord_username?: string | null;
   vjudge_username?: string | null;
@@ -29,6 +30,7 @@ export interface UpdateProfilePayload {
   name?: string;
   phone_number?: string | null;
   institute?: string | null;
+  avatar_url?: string | null;
   facebook_link?: string | null;
   discord_username?: string | null;
   vjudge_username?: string | null;

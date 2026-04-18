@@ -1,19 +1,42 @@
+import base64
 from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import secrets
 
 from jose import jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+PBKDF2_ITERATIONS = 100_000
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS)
+    encoded_salt = base64.b64encode(salt).decode("utf-8")
+    encoded_digest = base64.b64encode(digest).decode("utf-8")
+    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${encoded_salt}${encoded_digest}"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        algorithm, iterations, encoded_salt, encoded_digest = hashed_password.split("$", 3)
+    except ValueError:
+        return False
+
+    if algorithm != "pbkdf2_sha256":
+        return False
+
+    salt = base64.b64decode(encoded_salt.encode("utf-8"))
+    expected_digest = base64.b64decode(encoded_digest.encode("utf-8"))
+    candidate_digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        plain_password.encode("utf-8"),
+        salt,
+        int(iterations),
+    )
+    return hmac.compare_digest(candidate_digest, expected_digest)
 
 
 def create_access_token(subject: str) -> str:

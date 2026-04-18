@@ -1,15 +1,17 @@
-from bson import ObjectId
-from pymongo.database import Database
-from pymongo.errors import DuplicateKeyError
+from collections.abc import Mapping
+import sqlite3
+from uuid import uuid4
 
 UserDocument = dict[str, object]
 
 USER_FIELDS = [
+    "id",
     "name",
     "email",
     "password_hash",
     "phone_number",
     "institute",
+    "avatar_url",
     "facebook_link",
     "discord_username",
     "vjudge_username",
@@ -17,62 +19,76 @@ USER_FIELDS = [
     "is_active",
 ]
 
-def serialize_user(document: UserDocument | None) -> UserDocument | None:
+def serialize_user(document: sqlite3.Row | Mapping[str, object] | None) -> UserDocument | None:
     if document is None:
         return None
 
-    serialized = {key: document.get(key) for key in USER_FIELDS}
-    serialized["id"] = str(document["_id"])
-    return serialized
+    return {key: document[key] for key in USER_FIELDS}
 
 
-def get_user_by_email(db: Database, email: str) -> UserDocument | None:
-    document = db["users"].find_one({"email": email})
+def get_user_by_email(db: sqlite3.Connection, email: str) -> UserDocument | None:
+    document = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     return serialize_user(document)
 
 
-def get_user_by_id(db: Database, user_id: str) -> UserDocument | None:
-    if not ObjectId.is_valid(user_id):
-        return None
-
-    document = db["users"].find_one({"_id": ObjectId(user_id)})
+def get_user_by_id(db: sqlite3.Connection, user_id: str) -> UserDocument | None:
+    document = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     return serialize_user(document)
 
 
 def create_user(
-    db: Database,
+    db: sqlite3.Connection,
     *,
     name: str,
     email: str,
     password_hash: str,
 ) -> UserDocument | None:
-    payload = {
-        "name": name,
-        "email": email,
-        "password_hash": password_hash,
-        "phone_number": None,
-        "institute": None,
-        "facebook_link": None,
-        "discord_username": None,
-        "vjudge_username": None,
-        "codeforces_username": None,
-        "is_active": True,
-    }
-    collection = db["users"]
-
     try:
-        result = collection.insert_one(payload)
-    except DuplicateKeyError:
+        user_id = str(uuid4())
+        db.execute(
+            """
+            INSERT INTO users (
+                id, name, email, password_hash, phone_number, institute, facebook_link,
+                avatar_url, discord_username, vjudge_username, codeforces_username, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                name,
+                email,
+                password_hash,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+            ),
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
         return None
 
-    document = collection.find_one({"_id": result.inserted_id})
+    document = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     return serialize_user(document)
 
 
-def update_user(db: Database, user_id: str, updates: dict) -> UserDocument | None:
-    if not ObjectId.is_valid(user_id):
-        return None
+def update_user(
+    db: sqlite3.Connection,
+    user_id: str,
+    updates: dict[str, object | None],
+) -> UserDocument | None:
+    if not updates:
+        return get_user_by_id(db, user_id)
 
-    db["users"].update_one({"_id": ObjectId(user_id)}, {"$set": updates})
-    document = db["users"].find_one({"_id": ObjectId(user_id)})
+    assignments = ", ".join(f"{field} = ?" for field in updates)
+    values = [*updates.values(), user_id]
+    db.execute(
+        f"UPDATE users SET {assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        values,
+    )
+    db.commit()
+    document = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     return serialize_user(document)

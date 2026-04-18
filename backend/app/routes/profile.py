@@ -1,5 +1,6 @@
+import sqlite3
+
 from fastapi import APIRouter, Depends
-from pymongo.database import Database
 
 from app.api.deps import get_current_user
 from app.core.database import get_database
@@ -17,7 +18,7 @@ def read_my_profile(current_user: dict = Depends(get_current_user)) -> UserProfi
 @router.patch("/me", response_model=UserProfileResponse)
 def update_my_profile(
     payload: UpdateProfileRequest,
-    db: Database = Depends(get_database),
+    db: sqlite3.Connection = Depends(get_database),
     current_user: dict = Depends(get_current_user),
 ) -> UserProfileResponse:
     return update_profile(db, current_user, payload)

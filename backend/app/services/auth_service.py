@@ -1,5 +1,6 @@
+import sqlite3
+
 from fastapi import HTTPException, status
-from pymongo.database import Database
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.repositories.user_repository import create_user, get_user_by_email
@@ -7,7 +8,7 @@ from app.schemas.auth import AuthResponse, SignInRequest, SignUpRequest
 from app.schemas.profile import UserProfileResponse
 
 
-def signup(db: Database, payload: SignUpRequest) -> AuthResponse:
+def signup(db: sqlite3.Connection, payload: SignUpRequest) -> AuthResponse:
     existing_user = get_user_by_email(db, payload.email)
     if existing_user is not None:
         raise HTTPException(
@@ -34,7 +35,7 @@ def signup(db: Database, payload: SignUpRequest) -> AuthResponse:
     )
 
 
-def signin(db: Database, payload: SignInRequest) -> AuthResponse:
+def signin(db: sqlite3.Connection, payload: SignInRequest) -> AuthResponse:
     user = get_user_by_email(db, payload.email)
     if user is None or not verify_password(payload.password, str(user["password_hash"])):
         raise HTTPException(
