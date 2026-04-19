@@ -93,7 +93,10 @@ Frontend runs at `http://localhost:3000`.
 - Framework preset: `Next.js`
 - Build command: `npm run build`
 - Install command: `npm install`
-- Set `NEXT_PUBLIC_API_BASE_URL` to your Render backend URL, for example `https://your-backend.onrender.com/api/v1`
+- Set either:
+- `NEXT_PUBLIC_API_URL=https://your-backend.onrender.com`
+- or `NEXT_PUBLIC_API_BASE_URL=https://your-backend.onrender.com/api/v1`
+- The frontend sign-up route resolves to `POST /api/v1/auth/signup`, so the final API base must match the backend prefix `/api/v1`
 - No `vercel.json` is required for the current frontend setup
 
 ### Backend on Render
@@ -122,7 +125,7 @@ Frontend runs at `http://localhost:3000`.
 Frontend on Vercel:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://your-backend.onrender.com/api/v1
+NEXT_PUBLIC_API_URL=https://your-backend.onrender.com
 ```
 
 Backend on Render:
@@ -153,6 +156,8 @@ BACKEND_CORS_ORIGINS=["https://your-frontend.vercel.app"]
 - Set the frontend env variable in Vercel to `https://your-backend.onrender.com/api/v1`.
 - CORS errors in the browser
 - Make sure `BACKEND_CORS_ORIGINS` contains the exact Vercel frontend origin, such as `https://your-frontend.vercel.app`.
+- `404 Not Found` on sign up
+- Make sure Vercel is not building with a localhost API URL. The frontend must resolve to `https://your-backend.onrender.com/api/v1/auth/signup`.
 - `401` after sign-in
 - Confirm the frontend is calling the correct backend base URL and the token is being sent in the `Authorization` header.
 - Render service starts but requests fail

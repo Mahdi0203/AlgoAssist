@@ -1,6 +1,16 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  (process.env.NODE_ENV === "development" ? "http://127.0.0.1:8000/api/v1" : undefined);
+const configuredApiUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL;
+
+function normalizeApiBaseUrl(url: string) {
+  const trimmedUrl = url.replace(/\/+$/, "");
+  return trimmedUrl.endsWith("/api/v1") ? trimmedUrl : `${trimmedUrl}/api/v1`;
+}
+
+const API_BASE_URL = configuredApiUrl
+  ? normalizeApiBaseUrl(configuredApiUrl)
+  : process.env.NODE_ENV === "development"
+    ? "http://127.0.0.1:8000/api/v1"
+    : "https://algoassist-7ub6.onrender.com/api/v1";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH";
