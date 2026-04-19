@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: algoassist-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: AlgoAssist API
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: MONGODB_DB_NAME
+        value: algoassist
+      - key: SECRET_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        sync: false

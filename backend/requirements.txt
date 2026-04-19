@@ -3,3 +3,4 @@ uvicorn[standard]==0.34.2
 pydantic-settings==2.9.1
 python-jose[cryptography]==3.3.0
 email-validator==2.2.0
+pymongo==4.12.0

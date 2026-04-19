@@ -1,7 +1,6 @@
-import sqlite3
-
 from fastapi import HTTPException, status
 
+from app.core.database import DatabaseClient
 from app.repositories.user_repository import update_user
 from app.schemas.profile import UpdateProfileRequest, UserProfileResponse
 
@@ -11,7 +10,7 @@ def get_profile(current_user: dict) -> UserProfileResponse:
 
 
 def update_profile(
-    db: sqlite3.Connection,
+    db: DatabaseClient,
     current_user: dict,
     payload: UpdateProfileRequest,
 ) -> UserProfileResponse:

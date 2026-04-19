@@ -17,14 +17,14 @@ From `backend/`:
 copy .env.example .env
 ```
 
-Default local database path:
+Default local MongoDB settings:
 
 ```env
-DATABASE_PATH=algoassist.db
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DB_NAME=algoassist
 ```
 
-The app creates the SQLite database file automatically on startup.
-On Windows, the default file is stored in `%LOCALAPPDATA%\AlgoAssist\algoassist.db`.
+Run a local MongoDB server before starting the API, or point `MONGODB_URI` at MongoDB Atlas.
 
 ### 2. Create Python environment and install dependencies
 
@@ -73,6 +73,35 @@ Frontend will be available at `http://127.0.0.1:3000`.
 
 ## Notes
 
-- The backend uses a local SQLite file so it works on a fresh localhost setup without MongoDB.
-- On Windows, the default database path resolves to `%LOCALAPPDATA%\AlgoAssist\algoassist.db`.
-- Add migrations later if you plan to evolve the schema beyond local development.
+- The backend uses MongoDB in both local and deployed environments.
+- The app creates unique indexes for `users.id` and `users.email` during startup.
+- Add a one-time data migration if you need to move existing SQLite user data into MongoDB.
+
+## Render + MongoDB Deployment
+
+Use these Render settings from `backend/`:
+
+- Root directory: `backend`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Health check path: `/health`
+
+Recommended environment variables:
+
+```env
+ENVIRONMENT=production
+PORT=10000
+APP_NAME=AlgoAssist API
+API_V1_PREFIX=/api/v1
+SECRET_KEY=replace-with-a-long-random-secret
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB_NAME=algoassist
+BACKEND_CORS_ORIGINS=["https://your-frontend.vercel.app"]
+```
+
+Behavior by environment:
+
+- Local development and Render both use MongoDB.
+- Render should set `MONGODB_URI` to your production MongoDB or MongoDB Atlas instance.
+- The app binds correctly on Render with `--host 0.0.0.0 --port $PORT`.

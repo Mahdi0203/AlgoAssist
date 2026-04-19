@@ -1,17 +1,15 @@
-import sqlite3
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
-from app.core.database import get_database
+from app.core.database import DatabaseClient, get_database
 from app.core.security import decode_access_token
 from app.repositories.user_repository import get_user_by_id
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/signin")
 
 def get_current_user(
-    db: sqlite3.Connection = Depends(get_database),
+    db: DatabaseClient = Depends(get_database),
     token: str = Depends(oauth2_scheme),
 ) -> dict:
     credentials_exception = HTTPException(

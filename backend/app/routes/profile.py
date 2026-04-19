@@ -1,9 +1,7 @@
-import sqlite3
-
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_current_user
-from app.core.database import get_database
+from app.core.database import DatabaseClient, get_database
 from app.schemas.profile import UpdateProfileRequest, UserProfileResponse
 from app.services.profile_service import get_profile, update_profile
 
@@ -18,7 +16,7 @@ def read_my_profile(current_user: dict = Depends(get_current_user)) -> UserProfi
 @router.patch("/me", response_model=UserProfileResponse)
 def update_my_profile(
     payload: UpdateProfileRequest,
-    db: sqlite3.Connection = Depends(get_database),
+    db: DatabaseClient = Depends(get_database),
     current_user: dict = Depends(get_current_user),
 ) -> UserProfileResponse:
     return update_profile(db, current_user, payload)
