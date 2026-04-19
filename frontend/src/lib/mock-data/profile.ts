@@ -15,6 +15,8 @@ export type UserProfile = {
   name: string;
   email: string;
   avatarUrl: string;
+  title: string;
+  bio: string;
   stats: ProfileStat[];
   fields: ProfileField[];
 };
@@ -24,6 +26,9 @@ export const userProfile: UserProfile = {
   email: "mahditalukder123@gmail.com",
   avatarUrl:
     "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80",
+  title: "Competitive Programmer",
+  bio:
+    "Building consistency through daily problem solving, contest practice, and focused algorithm study.",
   stats: [
     {
       label: "Total Unique Solves",
